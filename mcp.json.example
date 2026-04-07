@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "rekordbox-smart-mcp": {
+      "command": "node",
+      "args": [
+        "/absolute/path/to/rekordbox-smart-mcp/dist/index.js"
+      ]
+    }
+  }
+}

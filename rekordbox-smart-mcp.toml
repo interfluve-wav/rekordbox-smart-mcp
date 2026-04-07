@@ -1,0 +1,21 @@
+# Rekordbox Smart MCP Configuration
+
+[library]
+# Path to Rekordbox XML file (optional; can also load via tools)
+xml_path = ""
+
+[rekordbox]
+# Path to Rekordbox 6/7 master.db. Defaults to Pioneer's usual location per OS.
+# Set only if your database lives elsewhere.
+auto_detect = true
+db_path = ""
+
+[cache]
+# SQLite cache for BPM scans and library state
+enabled = true
+db_path = "./localDB/cacheDB.sqlite3"
+
+[audio]
+# Path to FFmpeg and FFprobe binaries (used by BPM cache and audio tag writing if those tools are invoked)
+ffmpeg_path = "/usr/local/bin/ffmpeg"
+ffprobe_path = "/usr/local/bin/ffprobe"
