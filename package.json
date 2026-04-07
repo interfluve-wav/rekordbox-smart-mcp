@@ -38,14 +38,13 @@
     "LICENSE"
   ],
   "scripts": {
-    "build": "tsc && mkdir -p dist/ui && cp src/ui/*.html dist/ui/ && cp -f src/ui/tool-catalog.json dist/ui/",
+    "build": "tsc",
     "dev": "tsx watch src/index.ts",
     "start": "node dist/index.js",
     "test": "npm run build && node --experimental-vm-modules node_modules/jest/bin/jest.js --passWithNoTests",
     "test:smoke": "tsx scripts/smoke-tools.mts",
     "test:rekordbox-fixture": "PATH=\"$PWD/TEST DB/.venv/bin:$PATH\" npx tsx \"TEST DB/run-rekordbox-fixture-tests.mts\"",
-    "test:mcp-all-tools": "PATH=\"$PWD/TEST DB/.venv/bin:$PATH\" npx tsx scripts/run-all-mcp-tools.mts",
-    "ui:preview": "npm run build && node scripts/serve-ui.mjs"
+    "test:mcp-all-tools": "PATH=\"$PWD/TEST DB/.venv/bin:$PATH\" npx tsx scripts/run-all-mcp-tools.mts"
   },
   "keywords": [
     "mcp",
