@@ -216,6 +216,10 @@ Rollback creates a pre-rollback backup and logs itself as a new mutation, provid
 - Rollback only works if backup file still exists
 - Setlist tools operate on in-memory state (export to persist)
 
+## Disclaimer
+
+**rekordbox-smart-mcp is not affiliated with, endorsed by, or connected to Pioneer DJ, AlphaTheta Corporation, or Rekordbox in any way.** This is an independent, unofficial tool that works with Rekordbox XML exports and database files. Use at your own risk. Always keep backups of your original library data.
+
 ## License
 
 MIT
