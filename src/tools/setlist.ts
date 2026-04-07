@@ -275,41 +275,57 @@ export async function analyzeSetlist(input: SetlistAnalysisInput): Promise<{
       return { success: false, error: 'No tracks found' };
     }
 
+    // Filter tracks with complete metadata for analysis (need BPM, Key, Artist, Genre)
+    const tracksWithMetadata = tracks.filter(t => {
+      const hasBpm = t.AverageBpm && Number(t.AverageBpm) > 0;
+      const hasKey = t.Key || t.Tonality;
+      const hasArtist = t.Artist && t.Artist.trim() !== '';
+      const hasGenre = t.Genre && t.Genre.trim() !== '';
+      return hasBpm && hasKey && hasArtist && hasGenre;
+    });
+
+    if (tracksWithMetadata.length === 0) {
+      return { success: false, error: 'No tracks with complete metadata (BPM, key, artist, genre) found for analysis' };
+    }
+
+    // Use filtered tracks for analysis
+    const analysisTracks = tracksWithMetadata;
+
     // Basic stats
-    const totalDuration = tracks.reduce((sum, t) => sum + Number(t.TotalTime || 0), 0);
-    const bpms = tracks.map((t) => Number(t.AverageBpm || 0)).filter((b) => b > 0);
+    const totalDuration = analysisTracks.reduce((sum, t) => sum + Number(t.TotalTime || 0), 0);
+    const bpms = analysisTracks.map((t) => Number(t.AverageBpm || 0)).filter((b) => b > 0);
     const keyDist: Record<string, number> = {};
-    for (const t of tracks) {
+    for (const t of analysisTracks) {
       const key = t.Key || t.Tonality || 'Unknown';
       keyDist[key] = (keyDist[key] || 0) + 1;
     }
 
     // Artist concentration
     const artistCounts: Record<string, number> = {};
-    for (const t of tracks) {
+    for (const t of analysisTracks) {
       const a = (t.Artist || 'Unknown').toLowerCase();
       artistCounts[a] = (artistCounts[a] || 0) + 1;
     }
     const sortedArtists = Object.entries(artistCounts).sort((a, b) => b[1] - a[1]).slice(0, 3);
-    const artistDiversity = 1 - (sortedArtists.reduce((sum, [, count]) => sum + count, 0) / tracks.length) * (1 - 1 / Math.sqrt(tracks.length));
+    const artistDiversity = 1 - (sortedArtists.reduce((sum, [, count]) => sum + count, 0) / analysisTracks.length) * (1 - 1 / Math.sqrt(analysisTracks.length));
 
     // Genre diversity (simple distinct count normalized)
-    const genres = new Set(tracks.map((t) => t.Genre || 'Unknown'));
-    const genreDiversity = genres.size / tracks.length;
+    const genres = new Set(analysisTracks.map((t) => t.Genre || 'Unknown'));
+    const genreDiversity = genres.size / analysisTracks.length;
 
     // Harmonic compatibility (consecutive tracks)
     let harmonicHits = 0;
     const energyCurve: Array<{ index: number; bpm: number; key?: string; transitionScore: number }> = [];
     const gaps: Array<{ from: number; to: number; bpmJump: number; severity: 'low' | 'medium' | 'high' }> = [];
 
-    for (let i = 0; i < tracks.length; i++) {
-      const t = tracks[i];
+    for (let i = 0; i < analysisTracks.length; i++) {
+      const t = analysisTracks[i];
       const bpm = Number(t.AverageBpm || 0);
       const key = t.Key || t.Tonality || '';
       energyCurve.push({ index: i, bpm, key, transitionScore: 0 });
 
       if (i > 0) {
-        const prev = tracks[i - 1];
+        const prev = analysisTracks[i - 1];
         const prevKey = prev.Key || prev.Tonality || '';
         const dist = camelotDistance(prevKey, key);
         const isCompatible = dist <= 1;
@@ -327,17 +343,17 @@ export async function analyzeSetlist(input: SetlistAnalysisInput): Promise<{
         }
       }
     }
-    const harmonicScore = tracks.length > 1 ? harmonicHits / (tracks.length - 1) : 1;
+    const harmonicScore = analysisTracks.length > 1 ? harmonicHits / (analysisTracks.length - 1) : 1;
 
     // Recommendations
     const recommendations: string[] = [];
     if (harmonicScore < 0.6) {
       recommendations.push('Harmonic compatibility is low. Consider mixing tracks in compatible Camelot keys (±1).');
     }
-    if (gaps.length > tracks.length * 0.3) {
+    if (gaps.length > analysisTracks.length * 0.3) {
       recommendations.push('Many large BPM jumps. Sort by BPM or add transitional tracks to smooth mixing.');
     }
-    if (sortedArtists[0] && sortedArtists[0][1] > tracks.length * 0.3) {
+    if (sortedArtists[0] && sortedArtists[0][1] > analysisTracks.length * 0.3) {
       recommendations.push(`Artist "${sortedArtists[0][0]}" appears ${sortedArtists[0][1]} times – consider more variety.`);
     }
     if (genreDiversity < 0.5) {
@@ -348,7 +364,7 @@ export async function analyzeSetlist(input: SetlistAnalysisInput): Promise<{
       success: true,
       analysis: {
         playlistName: input.playlist_name,
-        trackCount: tracks.length,
+        trackCount: analysisTracks.length,
         totalDurationMinutes: Math.round(totalDuration / 60),
         avgBpm: Number((bpms.length ? bpms.reduce((a, b) => a + b, 0) / bpms.length : 0).toFixed(1)),
         bpmRange: { min: Math.min(...bpms), max: Math.max(...bpms) },
@@ -393,6 +409,17 @@ export async function suggestTransitions(input: TransitionSuggestionInput): Prom
       return { success: false, error: 'Must provide either playlist_name or track_ids' };
     }
 
+    // Filter tracks with required metadata (BPM, Key) for transitions
+    const validTracks = tracks.filter(t => {
+      const hasBpm = t.AverageBpm && Number(t.AverageBpm) > 0;
+      const hasKey = t.Key || t.Tonality;
+      return hasBpm && hasKey;
+    });
+
+    if (validTracks.length === 0) {
+      return { success: false, error: 'No tracks with complete BPM and key data found for transition suggestions' };
+    }
+
     const limit = input.limit_per_track || 3;
     const allTracks = service.getAllTracks();
     const suggestions: Array<{
@@ -403,14 +430,18 @@ export async function suggestTransitions(input: TransitionSuggestionInput): Prom
       mixTip: string;
     }> = [];
 
-    for (let i = 0; i < tracks.length - 1; i++) {
-      const current = tracks[i];
+    for (let i = 0; i < validTracks.length - 1; i++) {
+      const current = validTracks[i];
       const candidates: Array<{ track: Track; score: number }> = [];
 
       for (const candidate of allTracks) {
+        // Skip if same track
         if (candidate.TrackID === current.TrackID) continue;
         // Already in set?
-        if (tracks.some((t) => t.TrackID === candidate.TrackID)) continue;
+        if (validTracks.some((t) => t.TrackID === candidate.TrackID)) continue;
+        // Candidate must have BPM and Key
+        if (!candidate.AverageBpm || Number(candidate.AverageBpm) <= 0) continue;
+        if (!candidate.Key && !candidate.Tonality) continue;
 
         // Compute compatibility
         const currentKey = current.Key || current.Tonality || '';
