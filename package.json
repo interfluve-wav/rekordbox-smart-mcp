@@ -2,17 +2,6 @@
   "name": "rekordbox-smart-mcp",
   "version": "1.0.0",
   "description": "Production-ready MCP server for Pioneer Rekordbox DJs – smart playlists, setlist analysis, undo system",
-  "keywords": [
-    "mcp",
-    "model-context-protocol",
-    "rekordbox",
-    "dj",
-    "playlist",
-    "music",
-    "harmonic-mixing",
-    "mixing",
-    "setlist"
-  ],
   "author": "interfluve-wav",
   "repository": {
     "type": "git",
@@ -48,9 +37,14 @@
   },
   "keywords": [
     "mcp",
+    "model-context-protocol",
     "rekordbox",
     "dj",
+    "playlist",
     "music",
+    "harmonic-mixing",
+    "mixing",
+    "setlist",
     "metadata"
   ],
   "license": "MIT",

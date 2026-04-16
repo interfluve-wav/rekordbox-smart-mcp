@@ -13,6 +13,20 @@ import { setScanCache } from './bpmCache.js';
 const CACHE_DIR = resolve(homedir(), '.bonk');
 const CACHE_FILE = resolve(CACHE_DIR, 'library-state.json');
 
+/**
+ * Normalize Rekordbox BPM: if the raw value is > 180, halve it.
+ * Rekordbox stores BPM at 2x actual tempo for ~27% of tracks (dubstep,
+ * drum-and-bass, and other half-tempo genres). Threshold of 180 BPM
+ * is well above any realistic DJ-library track tempo.
+ * See: https://github.com/interfluve-wav/dj-metadata-paper
+ */
+function normalizeBpm(rawBpm: number): number {
+  if (Number.isFinite(rawBpm) && rawBpm > 180) {
+    return rawBpm / 2;
+  }
+  return rawBpm;
+}
+
 export class LibraryService {
   private library: RekordboxLibrary | null = null;
   private parser: RekordboxParser;
@@ -108,7 +122,8 @@ export class LibraryService {
     for (const track of tracks) {
       const filePath = this.normalizeLocation(track.Location);
       if (!filePath || !existsSync(filePath)) continue;
-      const bpm = Number(track.AverageBpm || '');
+      const rawBpm = Number(track.AverageBpm || '');
+      const bpm = normalizeBpm(rawBpm);
       setScanCache(filePath, {
         trackId: track.TrackID || null,
         key: track.Key || track.Tonality || null,
@@ -437,7 +452,7 @@ export class LibraryService {
 
       // BPM range
       if (filters.bpm) {
-        const bpm = parseFloat(track.AverageBpm || '0');
+        const bpm = normalizeBpm(parseFloat(track.AverageBpm || '0'));
         if (filters.bpm.min !== undefined && bpm < filters.bpm.min) return false;
         if (filters.bpm.max !== undefined && bpm > filters.bpm.max) return false;
       }
@@ -505,8 +520,8 @@ export class LibraryService {
           valB = b.Album;
           break;
         case 'bpm':
-          valA = parseFloat(a.AverageBpm || '0');
-          valB = parseFloat(b.AverageBpm || '0');
+          valA = normalizeBpm(parseFloat(a.AverageBpm || '0'));
+          valB = normalizeBpm(parseFloat(b.AverageBpm || '0'));
           break;
         case 'key':
           valA = a.Key || a.Tonality;
@@ -611,7 +626,7 @@ export class LibraryService {
     const artists = [...new Set(this.library.tracks.map((t) => t.Artist).filter(Boolean))] as string[];
 
     const bpms = this.library.tracks
-      .map((t) => parseFloat(t.AverageBpm || '0'))
+      .map((t) => normalizeBpm(parseFloat(t.AverageBpm || '0')))
       .filter((b) => b > 0);
 
     const keyDistribution: Record<string, number> = {};

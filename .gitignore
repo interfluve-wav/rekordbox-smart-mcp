@@ -93,3 +93,7 @@ Thumbs.db
 rekordbox.xml
 audit/
 .bonk/
+
+# MCP working data
+localDB/
+

@@ -20,6 +20,15 @@ except Exception as e:
     emit({"ok": False, "error": f"pyrekordbox import failed: {e}"})
     sys.exit(0)
 
+def normalize_bpm(raw):
+    if raw is None:
+        return None
+    try:
+        v = float(raw)
+        return v / 2 if v > 180 else v
+    except (TypeError, ValueError):
+        return None
+
 db_path = sys.argv[1] if len(sys.argv) > 1 else ""
 mode = sys.argv[2] if len(sys.argv) > 2 else ""
 arg = sys.argv[3] if len(sys.argv) > 3 else ""
@@ -79,7 +88,7 @@ try:
                     "contentId": str(r[1]) if r[1] is not None else None,
                     "title": r[2],
                     "artist": r[3],
-                    "bpm": r[4],
+                    "bpm": normalize_bpm(r[4]),
                     "lengthSeconds": r[5],
                     "rating": r[6],
                 }

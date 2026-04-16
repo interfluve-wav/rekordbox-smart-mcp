@@ -3,17 +3,20 @@
 [![MCP Server](https://img.shields.io/badge/MCP-Server-blue)](https://modelcontextprotocol.io)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Node.js 18+](https://img.shields.io/badge/Node.js-18%2B-green)](https://nodejs.org)
+[![Tests](https://img.shields.io/badge/20%2F20-Tests%20Passing-brightgreen)]()
 
-> **MCP server for DJs using Pioneer Rekordbox**
+> **MCP server for DJs using Pioneer Rekordbox** — 33 tools for library management, smart playlists, DJ analytics, and safe mutations with full undo capability.
 
-A production-ready MCP server providing essential tools for library management, smart playlist creation, DJ analytics, and safe mutations with full undo capability.
+This server implements the UDMS (Unified DJ Metadata Schema) principles described in the [DJ Metadata Quality paper](https://github.com/interfluve-wav/dj-metadata-paper): BPM cache layers, Camelot key normalization, and cross-platform field mapping.
+
+See also: [Bonk! — Electron+React DJ metadata editor](https://github.com/suhaas-lokey/bonk) (desktop companion app using aubio/keyfinder-cli for audio analysis).
 
 **Key advantages:**
 - ✅ **No Python required** – works with XML exports; optional DB integration
 - ✅ **Complete undo system** – all mutations create timestamped backups
 - ✅ **Smart setlist tools** – harmonic analysis, transition suggestions, energy curves
 - ✅ **Privacy-focused** – no external APIs, no telemetry
-- ✅ **28 tools** – comprehensive error handling, audit logging
+- ✅ **33 tools** – comprehensive error handling, audit logging
 
 ## Prerequisites
 
@@ -200,7 +203,7 @@ Rollback creates a pre-rollback backup and logs itself as a new mutation, provid
 ### Safety (2 tools)
 `mutation_history`, `mutation_rollback`
 
-**Total: 28 canonical tools**
+**Total: 33 canonical tools**
 
 ## Requirements
 
